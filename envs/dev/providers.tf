@@ -27,6 +27,12 @@ provider "azurerm" {
       recover_soft_deleted_key_vaults = true
     }
 
+    log_analytics_workspace {
+      # Workspaces are soft-deleted for 14 days and their name stays reserved,
+      # which blocks recreating the same name (especially in another region).
+      permanently_delete_on_destroy = true
+    }
+
     resource_group {
       # Azure auto-creates resources Terraform doesn't track (App Insights'
       # "Smart Detection" action group and a portal dashboard). This is a

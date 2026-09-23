@@ -105,5 +105,10 @@ terraform destroy    # end of session (bootstrap stays)
 ## Troubleshooting
 
 - **403 writing a Key Vault secret, or a Function app that won't start:** RBAC propagation took longer than 60 seconds. Run `terraform apply` again.
+- **SQL `ProvisioningDisabled` / "Provisioning is restricted in this region":** Azure limits new SQL servers in busy regions (East US, East US 2, North Central US) for many subscriptions. SQL VNet rules only work when the VNet and the server are in the same region, so move the whole environment rather than just SQL. Before choosing a region, check it (`Available` means OK, `Visible` means restricted):
+  ```powershell
+  $sub = az account show --query id -o tsv
+  az rest --method get --url "https://management.azure.com/subscriptions/$sub/providers/Microsoft.Sql/locations/centralus/capabilities?api-version=2023-08-01" --query status -o tsv
+  ```
 - **`MissingSubscriptionRegistration`:** the subscription hasn't enabled that service's resource provider. Run `az provider register -n <Namespace> --wait`, then re-run the plan. It's a one-time step per subscription. `resource_providers_to_register` in `envs/dev/providers.tf` is supposed to handle this, but it didn't register `Microsoft.Insights` on first use.
 - **Name already taken:** the random suffix makes this unlikely. Change `prefix` in `terraform.tfvars`.

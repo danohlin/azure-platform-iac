@@ -1,6 +1,6 @@
 # Copy to terraform.tfvars (gitignored) and fill in.
 subscription_id       = "00000000-0000-0000-0000-000000000000"
-location              = "eastus"
+location              = "centralus"
 prefix                = "azplat"
 budget_amount         = 50
 budget_emails         = ["you@example.com"]

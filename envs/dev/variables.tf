@@ -4,9 +4,9 @@ variable "subscription_id" {
 }
 
 variable "location" {
-  description = "Azure region for all resources."
+  description = "Azure region for all resources. Must allow Azure SQL provisioning for your subscription (see README)."
   type        = string
-  default     = "eastus"
+  default     = "centralus"
 }
 
 variable "prefix" {
