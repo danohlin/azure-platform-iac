@@ -1,0 +1,54 @@
+# --- Terraform state ---------------------------------------------------------
+# State contains every attribute of every resource, including generated
+# passwords and connection strings. Remote state lives in Azure Storage; the
+# bootstrap config keeps a local state file that must never be committed.
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# --- Terraform working directories -------------------------------------------
+# Provider binaries and module caches downloaded by `terraform init`.
+# (.terraform.lock.hcl is intentionally NOT ignored - commit it.)
+.terraform/
+
+# --- Saved plans -------------------------------------------------------------
+# Plan files embed resource values (including sensitive ones) in plaintext.
+*.tfplan
+*.tfplan.*
+tfplan
+*.plan
+
+# --- Variable files ----------------------------------------------------------
+# Real values (subscription ID, emails) live in gitignored tfvars; the
+# committed *.tfvars.example files document what is needed.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+# Backend config files hold the state storage account details.
+*.tfbackend
+!*.tfbackend.example
+
+# --- Crash logs & overrides --------------------------------------------------
+# Crash logs can dump provider state; override files are local-only tweaks.
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# --- Credentials & local environment ----------------------------------------
+# Azure CLI / azd caches and any dotenv files with tokens or secrets.
+.azure/
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+
+# --- Editor / OS --------------------------------------------------------------
+# Personal VS Code settings stay local; shared recommendations are committed.
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+.DS_Store
