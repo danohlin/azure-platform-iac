@@ -1,0 +1,109 @@
+# azure-platform-iac
+
+A Terraform learning project that deploys the most commonly used Azure services, wired together the way a real workload would be, with passwordless managed identity, RBAC, VNet integration, and centralized monitoring. It uses the cheapest SKUs, and it's designed to be applied and destroyed repeatedly.
+
+## What gets deployed
+
+| Module | Azure service | What it teaches | SKU |
+|---|---|---|---|
+| `resource-group` | Resource Group + Budget | Scoping, tagging, cost alerts | free |
+| `network` | VNet, subnets, NSGs | Delegation, service endpoints, NSG rules | free |
+| `monitoring` | Log Analytics + Application Insights | Centralized logs and APM | PerGB, 1 GB/day cap |
+| `identity` | User-assigned managed identity | Passwordless auth between services | free |
+| `key-vault` | Key Vault (RBAC mode) | Secrets, Key Vault references | Standard |
+| `storage` | Storage account, blob, queue, lifecycle | Entra-only data access, tiering | Standard_LRS |
+| `sql` | Azure SQL server + database | Entra admin, VNet rules, firewall | Basic (5 DTU) |
+| `container-registry` | Container Registry | Image storage, AcrPull via identity | Basic |
+| `app-service` | App Service (Linux, Node 24) | PaaS web hosting, VNet integration | B1 |
+| `container-apps` | Container Apps | Serverless containers, scale to zero | Consumption |
+| `function-app` | Azure Functions | Event-driven serverless | Flex Consumption |
+
+```
+bootstrap/   one-time: storage account for remote Terraform state (local state)
+envs/dev/    the root module: calls every module below
+modules/     one folder per service
+```
+
+### How the pieces connect
+
+- **One managed identity** is shared by the web app, container app, and function app. It gets `Key Vault Secrets User`, `Storage Blob Data Owner` / `Queue Data Contributor`, and `AcrPull`. No keys or connection strings are handed out.
+- **App Service** runs in `snet-app`. The subnet's `Microsoft.Sql` service endpoint and a SQL VNet rule let it reach the database without opening SQL to "all Azure services". Its `GREETING` setting is a **Key Vault reference**.
+- **Container Apps** runs in its own delegated subnet and ships logs to Log Analytics. The app scales to zero when idle.
+- **Functions (Flex Consumption)** reads its code package and host storage from the storage account through the managed identity. Shared-key access on that account is disabled.
+- **SQL** has you as the Entra admin. A generated SQL-auth password is also stored in Key Vault as `sql-admin-password`, as a break-glass path.
+
+## Cost
+
+About **$20–25/month if left running**, mostly the App Service B1 plan (~$13) and SQL Basic (~$5). Everything else is consumption-based and effectively $0 at idle. The budget in `resource-group` emails you at 50% and 80% of actual spend and at 100% of forecast.
+
+**Run `terraform destroy` when you finish a session.** An hour of use costs a few cents.
+
+## Prerequisites
+
+- Terraform >= 1.15 (tested with 1.15.7; current is 1.16.x)
+- Azure CLI, logged in: `az login`, then `az account set --subscription <id>`
+- Your account needs **Owner** or **User Access Administrator + Contributor** on the subscription, because this config creates role assignments.
+- VS Code: open the folder and accept the recommended extensions.
+
+## First-time setup
+
+### 1. Bootstrap remote state (once)
+
+```sh
+cd bootstrap
+cp terraform.tfvars.example terraform.tfvars   # fill in subscription_id
+terraform init
+terraform apply
+terraform output -raw backend_config > ../envs/dev/dev.tfbackend
+```
+
+`bootstrap/terraform.tfstate` stays local and gitignored. Don't delete it, or Terraform loses track of the state account.
+
+### 2. Deploy the platform
+
+```sh
+cd ../envs/dev
+cp terraform.tfvars.example terraform.tfvars   # subscription, email, UPN
+terraform init -backend-config=dev.tfbackend
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+The first apply takes about 10–15 minutes. Most of that is the Container Apps environment, plus three deliberate 60-second pauses that let RBAC assignments propagate before anything uses them.
+
+### 3. Try it out
+
+```sh
+terraform output
+curl -I "$(terraform output -raw web_app_url)"
+curl    "$(terraform output -raw container_app_url)"
+az keyvault secret show --vault-name "$(terraform output -raw key_vault_name)" -n app-greeting --query value
+az storage blob list --account-name "$(terraform output -raw storage_account_name)" -c data --auth-mode login
+az acr repository list -n "$(terraform output -raw acr_name)"
+```
+
+Then look at it all in the portal. **Application Insights → Live metrics / Transaction search** shows the requests you just made.
+
+## Daily loop
+
+```sh
+cd envs/dev
+terraform apply      # start of session
+# ...experiment...
+terraform destroy    # end of session (bootstrap stays)
+```
+
+## Ideas for next steps
+
+- Push your own image: `az acr build -r <acr> -t hello:v1 .`, then set the `image` variable in the `container-apps` module.
+- Deploy a function: `func init`, then `func azure functionapp publish <name>`.
+- Let the managed identity into SQL: connect as yourself and run `CREATE USER [id-azplat-dev] FROM EXTERNAL PROVIDER; ALTER ROLE db_datareader ADD MEMBER [id-azplat-dev];`
+- Replace public access with **private endpoints** in `snet-data` (Key Vault, Storage, SQL, ACR).
+- Add diagnostic settings that send every resource's logs to Log Analytics.
+- Add a `prod` environment under `envs/` that reuses the same modules with bigger SKUs.
+
+## Troubleshooting
+
+- **403 writing a Key Vault secret, or a Function app that won't start:** RBAC propagation took longer than 60 seconds. Run `terraform apply` again.
+- **`MissingSubscriptionRegistration`:** azurerm 5.x registers only the providers listed in `envs/dev/providers.tf`. Add the missing namespace there.
+- **Name already taken:** the random suffix makes this unlikely. Change `prefix` in `terraform.tfvars`.

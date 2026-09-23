@@ -1,0 +1,7 @@
+# Copy to dev.tfbackend (gitignored). Values come from:
+#   terraform -chdir=../../bootstrap output -raw backend_config
+resource_group_name  = "rg-azplat-tfstate"
+storage_account_name = "stazplattfxxxxxx"
+container_name       = "tfstate"
+key                  = "dev.terraform.tfstate"
+use_azuread_auth     = true

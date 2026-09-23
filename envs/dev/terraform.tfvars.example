@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+subscription_id       = "00000000-0000-0000-0000-000000000000"
+location              = "eastus"
+prefix                = "azplat"
+budget_amount         = 50
+budget_emails         = ["you@example.com"]
+sql_entra_admin_login = "you@example.com"
+
+# Optional: your public IP (curl -s https://api.ipify.org) for SSMS access.
+# client_ip = "203.0.113.10"
