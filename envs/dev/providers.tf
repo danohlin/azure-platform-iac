@@ -28,9 +28,11 @@ provider "azurerm" {
     }
 
     resource_group {
-      # Container Apps creates resources Terraform doesn't track; fail
-      # loudly rather than deleting them if they are still present.
-      prevent_deletion_if_contains_resources = true
+      # Azure auto-creates resources Terraform doesn't track (App Insights'
+      # "Smart Detection" action group and a portal dashboard). This is a
+      # throwaway learning environment, so let destroy delete them along with
+      # the RG. Set to true for anything long-lived.
+      prevent_deletion_if_contains_resources = false
     }
   }
 }

@@ -105,5 +105,5 @@ terraform destroy    # end of session (bootstrap stays)
 ## Troubleshooting
 
 - **403 writing a Key Vault secret, or a Function app that won't start:** RBAC propagation took longer than 60 seconds. Run `terraform apply` again.
-- **`MissingSubscriptionRegistration`:** azurerm 5.x registers only the providers listed in `envs/dev/providers.tf`. Add the missing namespace there.
+- **`MissingSubscriptionRegistration`:** the subscription hasn't enabled that service's resource provider. Run `az provider register -n <Namespace> --wait`, then re-run the plan. It's a one-time step per subscription. `resource_providers_to_register` in `envs/dev/providers.tf` is supposed to handle this, but it didn't register `Microsoft.Insights` on first use.
 - **Name already taken:** the random suffix makes this unlikely. Change `prefix` in `terraform.tfvars`.
