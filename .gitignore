@@ -46,6 +46,12 @@ override.tf.json
 *.pem
 *.pfx
 
+# --- Node test apps (apps/) ----------------------------------------------------
+# Downloaded packages are rebuilt from package-lock.json; deploy zips are build
+# output. (package-lock.json is intentionally committed.)
+node_modules/
+*.zip
+
 # --- Editor / OS --------------------------------------------------------------
 # Personal VS Code settings stay local; shared recommendations are committed.
 .vscode/*

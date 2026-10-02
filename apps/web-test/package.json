@@ -1,0 +1,16 @@
+{
+  "name": "web-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smoke test for the azplat web app: Key Vault reference + SQL network path via managed identity",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "mssql": "^12.7.2"
+  }
+}
