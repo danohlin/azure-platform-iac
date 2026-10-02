@@ -48,4 +48,10 @@ resource "azurerm_linux_web_app" "this" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    # Azure adds this tag itself to link the web app to App Insights in the
+    # portal. Without this, every plan would try to remove it.
+    ignore_changes = [tags["hidden-link: /app-insights-resource-id"]]
+  }
 }
