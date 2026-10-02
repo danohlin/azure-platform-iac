@@ -39,6 +39,10 @@ resource "azurerm_linux_web_app" "this" {
 
   app_settings = {
     APPLICATIONINSIGHTS_CONNECTION_STRING = var.app_insights_connection_string
+    # The connection string only says where telemetry goes; this turns on
+    # App Service's codeless agent (~3 = Linux) so requests, dependencies
+    # (e.g. SQL calls) and exceptions are actually collected.
+    ApplicationInsightsAgent_EXTENSION_VERSION = "~3"
     # DefaultAzureCredential picks the right identity from this.
     AZURE_CLIENT_ID = var.identity_client_id
     # Key Vault reference: App Service fetches the secret at runtime.
