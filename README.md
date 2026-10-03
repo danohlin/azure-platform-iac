@@ -96,7 +96,7 @@ terraform destroy    # end of session (bootstrap stays)
 ## Ideas for next steps
 
 - Push your own image: `az acr build -r <acr> -t hello:v1 .`, then set the `image` variable in the `container-apps` module.
-- Deploy a function: `func init`, then `func azure functionapp publish <name>`.
+- Deploy the queue function in `apps/func-jobs` (runs `processJob` for each message on the `jobs` queue): run `npm install` there, zip `host.json package.json package-lock.json src node_modules`, then `az functionapp deployment source config-zip -g <rg> -n <func> --src func-jobs.zip`. Afterwards, remove the stray `AzureWebJobsStorage` setting (see Troubleshooting).
 - Let the managed identity into SQL: connect as yourself and run `CREATE USER [id-azplat-dev] FROM EXTERNAL PROVIDER; ALTER ROLE db_datareader ADD MEMBER [id-azplat-dev];`
 - Replace public access with **private endpoints** in `snet-data` (Key Vault, Storage, SQL, ACR).
 - Add diagnostic settings that send every resource's logs to Log Analytics.
@@ -111,4 +111,5 @@ terraform destroy    # end of session (bootstrap stays)
   az rest --method get --url "https://management.azure.com/subscriptions/$sub/providers/Microsoft.Sql/locations/centralus/capabilities?api-version=2023-08-01" --query status -o tsv
   ```
 - **`MissingSubscriptionRegistration`:** the subscription hasn't enabled that service's resource provider. Run `az provider register -n <Namespace> --wait`, then re-run the plan. It's a one-time step per subscription. `resource_providers_to_register` in `envs/dev/providers.tf` is supposed to handle this, but it didn't register `Microsoft.Insights` on first use.
+- **Function host errors ("Server failed to authenticate the request", "error performing a read operation on the Blob Storage Secret Repository", or the deploy failing with "Failed to fetch host key"):** azurerm (5.6.0 and earlier) adds an `AzureWebJobsStorage` connection string with an empty account key to Flex Consumption apps, even with identity-based storage ([issue #33211](https://github.com/hashicorp/terraform-provider-azurerm/issues/33211)). The host prefers it over the `AzureWebJobsStorage__*` identity settings. Delete it with `az functionapp config appsettings delete -g <rg> -n <func> --setting-names AzureWebJobsStorage`. `terraform plan` won't show it, but the provider adds it back every time it updates the function app, so repeat the delete after any apply that changes the app.
 - **Name already taken:** the random suffix makes this unlikely. Change `prefix` in `terraform.tfvars`.

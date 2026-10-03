@@ -1,0 +1,13 @@
+{
+  "name": "func-jobs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Queue-triggered function for the azplat function app: processes messages from the storage queue 'jobs' via managed identity",
+  "main": "src/functions/*.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.16.5"
+  }
+}

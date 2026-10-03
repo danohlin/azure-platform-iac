@@ -42,8 +42,19 @@ resource "azurerm_function_app_flex_consumption" "this" {
     AzureWebJobsStorage__accountName = var.storage_account_name
     AzureWebJobsStorage__credential  = "managedidentity"
     AzureWebJobsStorage__clientId    = var.identity_client_id
-    AZURE_CLIENT_ID                  = var.identity_client_id
+    # Identity-based connection "JobsStorage" used by the processJob queue
+    # trigger (connection: 'JobsStorage' in apps/func-jobs).
+    JobsStorage__accountName = var.storage_account_name
+    JobsStorage__credential  = "managedidentity"
+    JobsStorage__clientId    = var.identity_client_id
+    AZURE_CLIENT_ID          = var.identity_client_id
   }
 
   tags = var.tags
+
+  lifecycle {
+    # Azure adds this tag itself to link the function app to App Insights in
+    # the portal. Without this, every plan would try to remove it.
+    ignore_changes = [tags["hidden-link: /app-insights-resource-id"]]
+  }
 }
