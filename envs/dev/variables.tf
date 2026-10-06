@@ -9,6 +9,12 @@ variable "location" {
   default     = "centralus"
 }
 
+variable "container_apps_location" {
+  description = "Region for the Container Apps environment. Separate from location because centralus had no Container Apps capacity (see README)."
+  type        = string
+  default     = "westus2"
+}
+
 variable "prefix" {
   description = "Short project prefix used in resource names."
   type        = string

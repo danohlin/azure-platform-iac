@@ -7,10 +7,10 @@ resource "azurerm_container_app_environment" "this" {
   logs_destination           = "log-analytics"
   log_analytics_workspace_id = var.log_analytics_id
 
-  # VNet-injected, public ingress. The workload-profiles environment type
-  # only needs a /27 subnet; the Consumption profile bills per use.
-  infrastructure_subnet_id       = var.subnet_id
-  internal_load_balancer_enabled = false
+  # With a subnet: VNet-injected (the workload-profiles environment type only
+  # needs a /27). Without one: Azure manages the network. Ingress is public
+  # either way; the Consumption profile bills per use.
+  infrastructure_subnet_id = var.subnet_id
 
   workload_profile {
     name                  = "Consumption"

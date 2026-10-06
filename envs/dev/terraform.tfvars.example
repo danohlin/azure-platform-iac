@@ -6,5 +6,8 @@ budget_amount         = 50
 budget_emails         = ["you@example.com"]
 sql_entra_admin_login = "you@example.com"
 
+# Optional: region for Container Apps only (default westus2; see README).
+# container_apps_location = "westus2"
+
 # Optional: your public IP (curl -s https://api.ipify.org) for SSMS access.
 # client_ip = "203.0.113.10"

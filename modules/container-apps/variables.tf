@@ -11,8 +11,9 @@ variable "location" {
 }
 
 variable "subnet_id" {
-  description = "Subnet delegated to Microsoft.App/environments."
+  description = "Subnet delegated to Microsoft.App/environments, in the same region as location. null = Azure-managed network (no VNet injection)."
   type        = string
+  default     = null
 }
 
 variable "log_analytics_id" {

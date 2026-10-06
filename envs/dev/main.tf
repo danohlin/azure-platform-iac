@@ -135,10 +135,14 @@ module "app_service" {
 module "container_apps" {
   source = "../../modules/container-apps"
 
-  name_suffix                    = local.name_suffix
-  resource_group_name            = module.resource_group.name
-  location                       = module.resource_group.location
-  subnet_id                      = module.network.subnet_ids.container_apps
+  name_suffix         = local.name_suffix
+  resource_group_name = module.resource_group.name
+  # centralus kept returning ManagedEnvironmentCapacityHeavyUsageError, so the
+  # environment runs in its own region. A VNet-injected environment must share
+  # its VNet's region, so subnet_id is left unset (Azure-managed network) while
+  # container_apps_location differs from location. snet-container-apps stays
+  # for switching back.
+  location                       = var.container_apps_location
   log_analytics_id               = module.monitoring.log_analytics_id
   identity_id                    = module.identity.id
   acr_login_server               = module.container_registry.login_server
