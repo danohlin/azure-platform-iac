@@ -1,0 +1,5 @@
+# Shell hooks and workflow files must keep LF line endings: a CRLF shebang
+# line breaks the hook, even under Git Bash.
+.githooks/* text eol=lf
+*.sh        text eol=lf
+*.yml       text eol=lf

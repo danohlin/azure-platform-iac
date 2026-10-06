@@ -93,6 +93,11 @@ terraform apply      # start of session
 terraform destroy    # end of session (bootstrap stays)
 ```
 
+## Secret scanning
+
+- **Locally:** `.githooks/pre-commit` runs gitleaks on staged changes and blocks the commit on a finding. Enable it once per clone with `git config core.hooksPath .githooks`. Requires [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH`.
+- **In CI:** `.github/workflows/secret-scan.yml` runs gitleaks over the full history and trufflehog over the pushed commits (`--results=verified,unknown`) on every push to `main` and every pull request.
+
 ## Ideas for next steps
 
 - Push your own image: `az acr build -r <acr> -t hello:v1 .`, then set the `image` variable in the `container-apps` module.
